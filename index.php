@@ -22,12 +22,12 @@ function openConnection(): PDO
 
 $pdo = openConnection();
 
-if(!empty($_POST['firstname']) && !empty($_POST['lastname'])) {
-    //@todo possible bug below? fixed
+if(!empty($_POST['firstname']) && !empty($_POST['lastname']) && !empty($_POST['sports'])) {
+    //@todo possible bug below? fixed (3)
     if(empty($_POST['id'])) {
         $handle = $pdo->prepare('INSERT INTO user (firstname, lastname, year) VALUES (:firstname, :lastname, :year)');
         $message = 'Your record has been added';
-    } else { // swapped the order of these. /p\
+    } else {
         //@todo why does this not work? -> doesn't handle multiple sports --> does now
         $handle = $pdo->prepare('UPDATE user set firstname = :firstname, lastname = :lastname, year = :year WHERE user.id = :id');
         $handle->bindValue(':id', $_POST['id']);
@@ -48,9 +48,7 @@ if(!empty($_POST['firstname']) && !empty($_POST['lastname'])) {
         $userId = $pdo->lastInsertId();
     }
 
-
-    //@todo Why does this loop not work? If only I could see the bigger picture. --> loop fixed
-
+    //@todo Why does this loop not work? If only I could see the bigger picture. --> loop fixed (2/3)
     foreach($_POST['sports'] AS $sport) {
 
         $handle = $pdo->prepare('INSERT INTO sport (user_id, sport) VALUES (:userId, :sport)');
@@ -60,7 +58,7 @@ if(!empty($_POST['firstname']) && !empty($_POST['lastname'])) {
     }
 }
 elseif(isset($_POST['delete'])) {
-    //@todo BUG? Why does always delete all my users? --> fixed
+    //@todo BUG? Why does always delete all my users? --> fixed (2)
     $handle = $pdo->prepare('DELETE FROM user WHERE user.id = :id');
     //The line below just gave me an error, probably not important. Annoying line.
     $handle->bindValue(':id', $_POST['id']);
@@ -69,14 +67,14 @@ elseif(isset($_POST['delete'])) {
     $message = 'Your record has been deleted';
 }
 
-//@todo Invalid query? --> problem with multiple sports per user --> fully fixed
+//@todo Invalid query? --> problem with multiple sports per user --> fully fixed (2)
 $handle = $pdo->prepare('SELECT user.id, concat_ws(" ",firstname, lastname) AS name, GROUP_CONCAT(distinct sport separator ", ") as sport FROM user LEFT JOIN sport ON user.id = sport.user_id WHERE year = :year GROUP BY user.id');
 $handle->bindValue(':year', date('Y'));
 $handle->execute();
 $users = $handle->fetchAll();
 
 $saveLabel = 'Save record';
-if(!empty($_GET['id']) && ) {
+if(!empty($_GET['id']) && empty($_POST)) { // fixed the getting stuck.
     $saveLabel = 'Update record';
 
     $handle = $pdo->prepare('SELECT user.id, firstname, lastname FROM user where user.id = :id');
@@ -90,7 +88,6 @@ if(!empty($_GET['id']) && ) {
     $handle->bindValue(':id', $_GET['id']);
     $handle->execute();
     foreach($handle->fetchAll() AS $sport) {
-
         $selectedUser['sports'][] = implode("",$sport);//@todo I just want an array of all sports of this, why is it not working? --> fixed. didnt work with array in array
         }
 }
