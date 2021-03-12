@@ -58,7 +58,6 @@
 
     <fieldset>
         <legend>Interested in the following sports</legend>
-
         <?php foreach($sports AS $sport):?>
 
             <label for="<?php echo $sport?>">
